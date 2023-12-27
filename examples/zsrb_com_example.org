@@ -12,7 +12,7 @@ Generate a practice data set that contains the following variables:
 - An interval variable that indicates the difference in days between the T1 and T2 assessments
 - Covariates: sex (has no effect), age (older perform worse), education (more education is better scores)
 
-#+begin_src R :results table
+#+begin_src R :results table :exports both
 ## * Display width
 options(width = 100)
 
