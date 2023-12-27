@@ -16,11 +16,27 @@ TBD
 TBD
 
 *** Input variables
+=zsrb_com= accepts the following input parameters:
 
-*** Output variables
+- =idf=: a *data frame* with all the variables (outcomes, predictors, covariates)
+- =t1=: a *string* referencing the column name in `idf` of the outcome measure at baseline
+- =t2=: a *string* referencing the column name in `idf` of the outcome measure at follow-up
+- =group=: a *string* or *array* referencing the group variables in `idf` at baseline and follow-up. This variable is only used to select the control group that will be used to derive parameter estimates for the ZSRB calculations. If you enter a string, this single variable will be used to determine the reference group. If you enter an array with a maximum of two strings, only subjects are selected where both group variables indicate that they are control subjects. So, if a subject is a control at time point one, but have progressed to being a patient at time point two, they will not be selected into the control group. /Note that group variables can be entered as either class factor or class numeric./
+- =ref= (/optional/):  a *string* or *integer* indicating with factor level (in case of a string) or numeric value (in case of an integer) represents the reference group for the ZSRB calculations. This parameter is optional. If you don't specify parameter, the zsrb function will automatically determine the first level of your factor variable as the reference category. If you entered your group variable(s) as class numeric and you did not specify a reference group with 'ref', then the minimum value is selected as the reference category.
+- =covs= (/optional/): a *string* or *array* with covariates that will be regressed out when calculating the ZSRB.
+
+*** Output
+The =zsrb_com= function returns a list object with three items:
+
+- The first element contains _sample size information_ of the subjects used for obtaining the regression parameters, as well as the _formula_ that was used to obtain the parameter estimates obtained from your control group that were used to calculate the ZSRB.
+
+- The second element contains the _summary of the regression model_ that was run to obtain the parameters of the control group for predicting time point 2 data. This is stored for evaluation of the estimates that were used in the ZSRB calculations.
+
+- The third element contains the output _data frame_. This data frame is a copy of input data frame with an additional column: the ZSRB score for the model. The name of this column is a concatenation of =zsrb= and
+  the variable names you entered for =t1= and =t2=, separated by underscores. E.g., =zsrb_T1score_T2score=.
 
 *** Example
-
+A toy example can be found [[./examples/zsrb_com_example.org][here]].
 
 * Dependencies
 This package does _not_ rely on other packages.
