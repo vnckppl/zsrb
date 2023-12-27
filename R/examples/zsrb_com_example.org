@@ -115,3 +115,21 @@ head(df)
 | 0 | control | 0 | control |  8 | 0 | female | 71.3057686960313 | 298.176398900746 | 35.6214183084579 |   41.09120199684 |
 | 0 | control | 0 | control | 11 | 0 | female | 68.4537214039067 | 347.726897067924 | 35.3239215236191 | 30.0548795740687 |
 | 1 | patient | 1 | patient | 11 | 1 | male   | 76.7928907929222 | 322.149649172383 | 34.8150710175937 | 32.2092437404188 |
+
+* Calculate the 'complex' ZSRB
+#+begin_src R :results output none
+my_srb_list <- zsrb::zsrb_com(
+                 idf = df,
+                 t1 = "T1_score",
+                 t2 = "T2_score",
+                 group = c("group_t1.f", "group_t2.f"),
+                 ref = "control",
+                 covs = c("sex.f", "age", "education", "interval")
+                 )
+#+end_src
+
+The output object consists of a list that has 3 elements:
+
+- =my_srb_list[[1]]= contains _sample size information_ of the subjects used for obtaining the regression parameters, as well as the _formula_ that was used to obtain the parameter estimates obtained from your control group that were used to calculate the ZSRB.
+- =my_srb_list[[2]]= contains the _summary of the regression model_ that was run to obtain the parameters of the control group for predicting time point 2 data. This is stored for evaluation of the estimates that were used in the ZSRB calculations.
+- =my_srb_list[[3]]= contains the output _data frame_. This data frame is the same as the input data frame, but with an additional column: the ZSRB score for the model.
