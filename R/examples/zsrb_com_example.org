@@ -1,0 +1,117 @@
+#+TITLE: Standardized Regression-Based (SRB) Change Score: 'complex' example
+#+PROPERTY: header-args :tangle no
+#+PROPERTY: header-args+ :eval never-export
+#+PROPERTY: header-args:R+ :session *SRB_R*
+
+* Generate some practice data
+Generate a practice data set that contains the following variables:
+- Group (controls vs. patients): Both a binary and a factor variable will be included
+- Outcome scores of an imaginary outcome measure at two time points: T1 and T2. The outcomes are manipulated such that:
+  + T2 scores are less than T1 scores (effect of time) and is depending on the time interval (see below)
+  + patients perform worse than controls on both T1 and T2 (with group-by-time interaction effect)
+- An interval variable that indicates the difference in days between the T1 and T2 assessments
+- Covariates: sex (has no effect), age (older perform worse), education (more education is better scores)
+
+#+begin_src R :results table
+## * Display width
+options(width = 100)
+
+## * Make this work replicable
+set.seed(357)
+
+## * Number of observations
+my_n <- 1000
+
+## * Create an empty data frame
+df <- as.data.frame(matrix(data = NA, nrow = my_n, ncol = 0))
+
+## * Define a group variable
+## ** Group at time 1
+df$group_t1 <- sample.int(2, my_n, replace = TRUE) - 1
+df$group_t1.f[df$group_t1 == 0] <- "control"
+df$group_t1.f[df$group_t1 == 1] <- "patient"
+df$group_t1.f <- as.factor(df$group_t1.f)
+
+## ** Group at time 2
+df$group_t2 <- df$group_t1
+df$group_t2.f <- df$group_t1.f
+## *** Randomly move a proportion of subjects from control to patient
+myprop <- 0.1
+## *** Number of rows based on proportion
+n_obs2change <- round(myprop * nrow(df), digits = 0)
+## *** List rows with control subjects
+ctrl_rows <- seq_len(nrow(df))[df$group_t1.f == "control"]
+## *** Randomly select the rows that will be changed
+i_obs2change <- sample(ctrl_rows, n_obs2change)
+## *** Change the group membership for these rows
+for (i in i_obs2change) {
+  df$group_t2[i] <- 1
+  df$group_t2.f[i] <- "patient"
+}
+
+## ** Effect of group (effect per category)
+# For calculating the baseline score and follow-up score
+beta_group_t1 <- -5
+beta_group_t2 <- -5
+# Additional effect of group at Time-2 per interval time
+beta_group_interaction <- -0.005
+
+## * Add covariates
+## ** Years of education'
+df$education <- round(rnorm(my_n, mean = 10, sd = 2))
+## *** Add additional education for the control subjects
+df$education <-
+  df$education + df$group_t1 * round(rnorm(my_n, mean = 0.5, sd = 1))
+## *** Effect of education (effect per year)
+beta_education <- 0.25
+
+## ** Biological sex
+df$sex <- sample.int(2, my_n, replace = TRUE) - 1
+df$sex.f[df$sex == 0] <- "female"
+df$sex.f[df$sex == 1] <- "male"
+df$sex.f <- as.factor(df$sex.f)
+## *** Effect of sex (effect of males)
+beta_sex <- 0
+
+## ** Age
+df$age <- rnorm(n = my_n, mean = 70, sd = 5)
+## *** Effect of age (effect per year)
+beta_age <- -0.25
+
+## ** Interval between assessments
+df$interval <- rnorm(n = my_n, mean = 365.25, sd = 45.65625)
+## *** Effect of interval (effect per unit, in this case days)
+beta_interval <- -0.01
+
+## * Generate outcome scores
+## ** Time-1 score
+# The last rnorm is to add some random error
+df$T1_score <-
+  rnorm(n = my_n, mean = 50, sd = 5) +
+  beta_group_t1 * df$group_t1 +
+  beta_education * df$education +
+  beta_sex * df$sex +
+  beta_age * df$age +
+  rnorm(n = my_n, mean = 0, sd = 5)
+
+## ** Time-2 score
+# The last rnorm is to add some random error
+df$T2_score <-
+  df$T1_score -
+  beta_group_t1 * df$group_t1 +
+  beta_group_t2 * df$group_t2 +
+  beta_interval * df$interval +
+  beta_group_interaction * df$group_t2 * df$interval +
+  rnorm(n = my_n, mean = 0, sd = 5)
+
+## * Peek at the data
+head(df)
+#+end_src
+
+#+RESULTS:
+| 0 | control | 0 | control |  7 | 1 | male   | 73.0382262351501 | 358.177861394347 | 28.6824215658593 | 32.3829934397777 |
+| 1 | patient | 1 | patient | 11 | 0 | female | 73.1008838613046 | 408.324768161888 | 25.1995680041217 | 16.6450185874575 |
+| 0 | control | 0 | control | 14 | 1 | male   |   71.97909439198 | 378.235568891409 |  41.673175243815 | 41.7180461427753 |
+| 0 | control | 0 | control |  8 | 0 | female | 71.3057686960313 | 298.176398900746 | 35.6214183084579 |   41.09120199684 |
+| 0 | control | 0 | control | 11 | 0 | female | 68.4537214039067 | 347.726897067924 | 35.3239215236191 | 30.0548795740687 |
+| 1 | patient | 1 | patient | 11 | 1 | male   | 76.7928907929222 | 322.149649172383 | 34.8150710175937 | 32.2092437404188 |
