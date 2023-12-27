@@ -1,4 +1,4 @@
-#' Calculate the Simple or Complex Standard Regression Based Change Score
+#' Calculate the Complex Standard Regression Based Change Score
 #'
 #' Calculate the Standard Regression Based Change Score as described by
 #' Hammers, Suhrie, Dixon, Porter and Duff (2016).
