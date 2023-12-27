@@ -13,7 +13,7 @@ Generate a practice data set that contains the following variables:
 - An interval variable that indicates the difference in days between the T1 and T2 assessments
 - Covariates: sex (has no effect), age (older perform worse), education (more education is better scores)
 
-#+begin_src R :results table
+#+begin_src R :results table :exports both
 ## * Display width
 options(width = 100)
 
@@ -138,26 +138,29 @@ The output object consists of a list that has 3 elements:
 
 - =my_srb_list[[1]]= contains _sample size information_ of the subjects used for obtaining the regression parameters, as well as the _formula_ that was used to obtain the parameter estimates obtained from your control group that were used to calculate the ZSRB.
 
-  #+begin_src R :results output raw
+  #+begin_src R :results output org :exports both
   options(width=200)
   print(my_srb_list[[1]])
   #+end_src
 
   #+RESULTS:
+  #+begin_src org
                                             Variable                                                    Value
   1         Total number of subjects in the data set                                                     1000
   2 control subjects that remain control at T2_score                                                      404
   3         control subjects that have complete data                                                      404
   4                               Regression formula T2_score ~ T1_score + sex.f + age + education + interval
   5                                  Reference group                                                  control
+  #+end_src
 
 - =my_srb_list[[2]]= contains the _summary of the regression model_ that was run to obtain the parameters of the control group for predicting time point 2 data. This is stored for evaluation of the estimates that were used in the ZSRB calculations.
 
-  #+begin_src R :results output raw
+  #+begin_src R :results output org :exports both
   print(my_srb_list[[2]])
   #+end_src
 
   #+RESULTS:
+  #+begin_src org
 
   Call:
   lm(formula = my_formula, data = cdf)
@@ -165,31 +168,27 @@ The output object consists of a list that has 3 elements:
   Coefficients:
   (Intercept)     T1_score    sex.fmale          age    education     interval
     -0.457846     1.047113    -0.600385    -0.002406     0.151480    -0.016040
+  #+end_src
 
 - =my_srb_list[[3]]= contains the output _data frame_. This data frame is the same as the input data frame, but with an additional column: the ZSRB score for the model.
 
-  #+begin_src R :results raw
-    print(names(my_srb_list[[3]]))
+  #+begin_src R :results output org :exports both
+  options(width=80)
+  print(names(my_srb_list[[3]]))
   #+end_src
 
   #+RESULTS:
-  group_t1
-  group_t1.f
-  group_t2
-  group_t2.f
-  education
-  sex
-  sex.f
-  age
-  interval
-  T1_score
-  T2_score
-  T2_score_prime
-  zsrb_T1_score_T2_score
+  #+begin_src org
+   [1] "group_t1"               "group_t1.f"             "group_t2"
+   [4] "group_t2.f"             "education"              "sex"
+   [7] "sex.f"                  "age"                    "interval"
+  [10] "T1_score"               "T2_score"               "T2_score_prime"
+  [13] "zsrb_T1_score_T2_score"
+  #+end_src
 
   The last variable here is the ZSRB score for the behavioral outcome T1_score - T2_score
 
-  #+begin_src R :results table
+  #+begin_src R :results table :exports both
   head(my_srb_list[[3]][, c(voi, "zsrb_T1_score_T2_score")])
   #+end_src
 
@@ -203,7 +202,7 @@ The output object consists of a list that has 3 elements:
 
   You can display the distribution of the ZSRB score using the base R =hist()= function, but for this github example, I will use the =txtplot= package:
 
-  #+begin_src R :results output org
+  #+begin_src R :results output org :exports both
   install.packages("txtplot")
   options(width=80)
   print(txtplot::txtdensity(my_srb_list[[3]]$zsrb_T1_score_T2_score))
