@@ -1,0 +1,14 @@
+Package: zsrb
+Title: Standardized Regression Based Change (Z) Score Calculation
+Version: 0.0.0.9000
+Authors@R:
+    person(given = "Vincent",
+           family = "Koppelmans",
+           role = c("aut", "cre"),
+           email = "vincent.koppelmans@utah.edu",
+           comment = c(ORCID = "0000-0003-2036-7603"))
+Description: This package allows you to calcualte Regression Based Change Z-Scores (zsrb) using either the 'simple' ZSRB (described here: https://pubmed.ncbi.nlm.nih.gov/37545235) or the 'complex' ZSRB (described here: https://pubmed.ncbi.nlm.nih.gov/15637773). A presentation on the background and application of ZSRB scores can be viewed here: https://youtu.be/AF7ypxP6uZY.
+License: `use_gpl3_license()`
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
