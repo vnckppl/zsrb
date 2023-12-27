@@ -1,5 +1,6 @@
 #+TITLE: Standardized Regression-Based (SRB) Change Score: 'complex' example
 #+PROPERTY: header-args :tangle no
+#+PROPERTY: header-args+ :exports both
 #+PROPERTY: header-args+ :eval never-export
 #+PROPERTY: header-args:R+ :session *SRB_R*
 
@@ -12,7 +13,7 @@ Generate a practice data set that contains the following variables:
 - An interval variable that indicates the difference in days between the T1 and T2 assessments
 - Covariates: sex (has no effect), age (older perform worse), education (more education is better scores)
 
-#+begin_src R :results table :exports both
+#+begin_src R :results table
 ## * Display width
 options(width = 100)
 
