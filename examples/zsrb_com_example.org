@@ -105,31 +105,126 @@ df$T2_score <-
   rnorm(n = my_n, mean = 0, sd = 5)
 
 ## * Peek at the data
-head(df)
+voi <- c(
+  "group_t1.f", "group_t2.f", "age", "sex.f", "education", "interval", "T1_score",
+  "T2_score"
+)
+head(df[, voi])
 #+end_src
 
 #+RESULTS:
-| 0 | control | 0 | control |  7 | 1 | male   | 73.0382262351501 | 358.177861394347 | 28.6824215658593 | 32.3829934397777 |
-| 1 | patient | 1 | patient | 11 | 0 | female | 73.1008838613046 | 408.324768161888 | 25.1995680041217 | 16.6450185874575 |
-| 0 | control | 0 | control | 14 | 1 | male   |   71.97909439198 | 378.235568891409 |  41.673175243815 | 41.7180461427753 |
-| 0 | control | 0 | control |  8 | 0 | female | 71.3057686960313 | 298.176398900746 | 35.6214183084579 |   41.09120199684 |
-| 0 | control | 0 | control | 11 | 0 | female | 68.4537214039067 | 347.726897067924 | 35.3239215236191 | 30.0548795740687 |
-| 1 | patient | 1 | patient | 11 | 1 | male   | 76.7928907929222 | 322.149649172383 | 34.8150710175937 | 32.2092437404188 |
+| control | control | 73.0382262351501 | male   |  7 | 358.177861394347 | 28.6824215658593 | 32.3829934397777 |
+| patient | patient | 73.1008838613046 | female | 11 | 408.324768161888 | 25.1995680041217 | 16.6450185874575 |
+| control | control |   71.97909439198 | male   | 14 | 378.235568891409 |  41.673175243815 | 41.7180461427753 |
+| control | control | 71.3057686960313 | female |  8 | 298.176398900746 | 35.6214183084579 |   41.09120199684 |
+| control | control | 68.4537214039067 | female | 11 | 347.726897067924 | 35.3239215236191 | 30.0548795740687 |
+| patient | patient | 76.7928907929222 | male   | 11 | 322.149649172383 | 34.8150710175937 | 32.2092437404188 |
 
 * Calculate the 'complex' ZSRB
 #+begin_src R :results output none
-my_srb_list <- zsrb::zsrb_com(
-                 idf = df,
-                 t1 = "T1_score",
-                 t2 = "T2_score",
-                 group = c("group_t1.f", "group_t2.f"),
-                 ref = "control",
-                 covs = c("sex.f", "age", "education", "interval")
-                 )
+my_srb_list <-
+  zsrb::zsrb_com(
+          idf = df,
+          t1 = "T1_score",
+          t2 = "T2_score",
+          group = c("group_t1.f", "group_t2.f"),
+          ref = "control",
+          covs = c("sex.f", "age", "education", "interval")
+        )
 #+end_src
 
 The output object consists of a list that has 3 elements:
 
 - =my_srb_list[[1]]= contains _sample size information_ of the subjects used for obtaining the regression parameters, as well as the _formula_ that was used to obtain the parameter estimates obtained from your control group that were used to calculate the ZSRB.
+
+  #+begin_src R :results output raw
+  options(width=200)
+  print(my_srb_list[[1]])
+  #+end_src
+
+  #+RESULTS:
+                                            Variable                                                    Value
+  1         Total number of subjects in the data set                                                     1000
+  2 control subjects that remain control at T2_score                                                      404
+  3         control subjects that have complete data                                                      404
+  4                               Regression formula T2_score ~ T1_score + sex.f + age + education + interval
+  5                                  Reference group                                                  control
+
 - =my_srb_list[[2]]= contains the _summary of the regression model_ that was run to obtain the parameters of the control group for predicting time point 2 data. This is stored for evaluation of the estimates that were used in the ZSRB calculations.
+
+  #+begin_src R :results output raw
+  print(my_srb_list[[2]])
+  #+end_src
+
+  #+RESULTS:
+
+  Call:
+  lm(formula = my_formula, data = cdf)
+
+  Coefficients:
+  (Intercept)     T1_score    sex.fmale          age    education     interval
+    -0.457846     1.047113    -0.600385    -0.002406     0.151480    -0.016040
+
 - =my_srb_list[[3]]= contains the output _data frame_. This data frame is the same as the input data frame, but with an additional column: the ZSRB score for the model.
+
+  #+begin_src R :results raw
+    print(names(my_srb_list[[3]]))
+  #+end_src
+
+  #+RESULTS:
+  group_t1
+  group_t1.f
+  group_t2
+  group_t2.f
+  education
+  sex
+  sex.f
+  age
+  interval
+  T1_score
+  T2_score
+  T2_score_prime
+  zsrb_T1_score_T2_score
+
+  The last variable here is the ZSRB score for the behavioral outcome T1_score - T2_score
+
+  #+begin_src R :results table
+  head(my_srb_list[[3]][, c(voi, "zsrb_T1_score_T2_score")])
+  #+end_src
+
+  #+RESULTS:
+  | control | control | 73.0382262351501 | male   |  7 | 358.177861394347 | 28.6824215658593 | 32.3829934397777 |   1.59368186521071 |
+  | patient | patient | 73.1008838613046 | female | 11 | 408.324768161888 | 25.1995680041217 | 16.6450185874575 | -0.814306129878118 |
+  | control | control |   71.97909439198 | male   | 14 | 378.235568891409 |  41.673175243815 | 41.7180461427753 |  0.628214962734759 |
+  | control | control | 71.3057686960313 | female |  8 | 298.176398900746 | 35.6214183084579 |   41.09120199684 |   1.54044706798425 |
+  | control | control | 68.4537214039067 | female | 11 | 347.726897067924 | 35.3239215236191 | 30.0548795740687 | -0.462474899221699 |
+  | patient | patient | 76.7928907929222 | male   | 11 | 322.149649172383 | 34.8150710175937 | 32.2092437404188 | 0.0959916865651458 |
+
+  You can display the distribution of the ZSRB score using the base R =hist()= function, but for this github example, I will use the =txtplot= package:
+
+  #+begin_src R :results output org
+  install.packages("txtplot")
+  options(width=80)
+  print(txtplot::txtdensity(my_srb_list[[3]]$zsrb_T1_score_T2_score))
+  #+end_src
+
+  #+RESULTS:
+  #+begin_src org
+  0.4 +-----+--------+-------+--------+-------+--------+--------++
+      |                         ******                           |
+      |                       ***    ***                         |
+      |                      **        **                        |
+  0.3 +                    **           ***                      +
+      |                   **              **                     |
+      |                  **                **                    |
+  0.2 +                 **                  **                   +
+      |               ***                    ***                 |
+      |              **                        **                |
+  0.1 +             **                           **              +
+      |           ***                             ***            |
+      |         ***                                 ******       |
+    0 +  ********                                        ******  +
+      +-----+--------+-------+--------+-------+--------+--------++
+           -3       -2      -1        0       1        2        3
+  NULL
+  #+end_src
