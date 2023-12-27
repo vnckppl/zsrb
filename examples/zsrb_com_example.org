@@ -134,6 +134,15 @@ my_srb_list <-
         )
 #+end_src
 
+In the syntax above, I am entering the following variables
+- =idf = df=: 'df' is the data frame with all the variables (outcomes, predictors, covariates)
+- =t1 = "T1_score"=: 'T1_score' is the column name of the outcome measure at baseline
+- =t2 = "T2_score"=: 'T1_score' is the column name of the outcome measure at follow-up
+- =group = c("group_t1.f", "group_t2.f")=: 'c("group_t1.f", "group_t2.f")' is an array of variables that divide your sample up into groups (e.g., control/patient, no-intervention/intervention/etc). This variable is only used to select the control group that will be used to derive parameter estimates for the ZSRB calculations. You can either enter one or two variables here. If you enter two variables, only subjects are selected where both group variables indicate that they are control subjects. So, if a subject is a control at time point one, but have progressed to being a patient at time point two, they will not be selected into the control group. /Note that group variables can be entered as either class factor or class numeric./
+- =ref = "control"=: 'control' is the factor level that is being used as the reference group for the ZSRB calculations. This parameter is optional. If you don't specify parameter, the zsrb function will automatically determine the first level of your factor variable as the reference category (read [[https://stackoverflow.com/questions/3872070/how-to-force-r-to-use-a-specified-factor-level-as-reference-in-a-regression][here]] about releveling factor variables with base R). If you entered your group variable(s) as class numeric and you did not specify a reference group with 'ref', then the minimum value is selected as the reference category.
+- =covs = c("sex.f", "age", "education", "interval")=: An optional flag. You can add as many covariates as necessary.
+
+** Output
 The output object consists of a list that has 3 elements:
 
 - =my_srb_list[[1]]= contains _sample size information_ of the subjects used for obtaining the regression parameters, as well as the _formula_ that was used to obtain the parameter estimates obtained from your control group that were used to calculate the ZSRB.
