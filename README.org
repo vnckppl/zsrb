@@ -94,12 +94,12 @@ A toy example can be found [[./examples/zsrb_com_example.org][here]].
 This package does _not_ rely on other packages.
 
 * Installation
-** Make sure that devtools are installed so that you can install packages directly from github:
-#+begin_src R
-install.packages("devtools")
-#+end_src
+- Make sure that devtools are installed so that you can install packages directly from github:
+  #+begin_src R
+  install.packages("devtools")
+  #+end_src
 
-** Install the zsrb package using devtools
-#+begin_src R
-devtools::install_github("vnckppl/zsrb")
-#+end_src
+- Install the zsrb package using devtools
+  #+begin_src R
+  devtools::install_github("vnckppl/zsrb")
+  #+end_src
