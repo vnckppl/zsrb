@@ -7,17 +7,17 @@
 #' @param idf Input data frame
 #' @param t1 Outcome variable scores at time point 1
 #' @param t2 Outcome variable scores at time point 2
-#' @param group1 Group variable at time point 1
-#' @param group2 Group variable at time point 2
-#' @param ref Reference group
-#' @param covs One or more covariates that you want to take into account
+#' @param group Group variable. If group membership changes over time, you can
+#' add an array with groups, e.g., c("group_t1", "group_t2")
+#' @param ref Reference group. If not set, the first factor level or lowest
+#' value will be selected
 #' @export
 
 zsrb_sim <-
-    function(idf, t1, t2, group1, group2, ref, covs = NULL) {
+    function(idf, t1, t2, group, ref = NULL) {
 
         ## * Select only columns with the Variables of interest
-        vois <- c(t1, t2, group1, group2, covs)
+        vois <- c(t1, t2, group)
         cdf <- idf[, c(vois)]
 
         ## * Subset the data frame to select only the control group subjects
@@ -28,7 +28,25 @@ zsrb_sim <-
         nrow_a1 <- nrow(cdf)
 
         ## ** Filter the data
-        cdf <- cdf[which(cdf[[group1]] == ref & cdf[[group2]] == ref), ]
+        ## *** Figure out the reference category if it not set explicitly
+        ## If no reference categorie has been set, then select the first
+        ## categorie as the reference catergorie
+        if (is.null(ref)) {
+            if (class(cdf[[group[1]]]) == "numeric")
+                ref <- min(cdf[[group[1]]])
+        } else if (class(cdf[[group[1]]]) == "factor") {
+            ref <- levels(cdf[[group[1]]])[1]
+        }
+
+        ## *** Filter the data for reference subjects only
+        for (grn in seq_len(length(group))) {
+            cdf <- cdf[cdf[[group[grn]]] == ref, ]
+        }
+
+        ## *** Remove rownames with NA in the name
+        # The previous command can result in rows with 'NA' in the rowname.
+        # These rows are compeltely empty. Remove them.
+        cdf <- cdf[!grepl("NA", rownames(cdf)), ]
 
         ## ** Count the total number of subjects after selection
         nrow_a2 <- nrow(cdf)
@@ -97,24 +115,34 @@ zsrb_sim <-
         # -1.645 or less traditionally indicates decline, -1.644 to +1.644
         # traditionally indicates no change, and +1.645 or higher traditionally
         # indicates improvement between assessment timepoints.
-        ovar_srb <- paste0(t1, "_", t2, "_zsrb")
+        ovar_srb <- paste0("zsrb_", t1, "_", t2)
         idf[[ovar_srb]] <- (idf[[t2]] - idf[[ovar_est]]) / see
 
         ## * Return the output data frame and some parameters
+        ## ** Edit this output table based on if 1 or 2 group vars were entered
+        if (grn == 1) {
+            tabletext <-
+                paste0("No. of `", ref, "` in the sample")
+        } else if (grn == 2) {
+            tabletext <-
+                paste0("No. of `", ref, "` that remain `", ref, "` at ", t2)
+        }
+
         ## ** Estimates
         omat <- c(
-            "Total number of subjects in the data set", nrow_a1,
-            paste("Control subjects that remain controls at", t2), nrow_a2,
-            "Control subjects that have complete data", nrow_a3,
-            paste("Control subjects: Mean of", t1), mt1,
-            paste("Control subjects: Mean of", t2), mt2,
-            paste("Control subjects: Standard Deviation of", t1), std1,
-            paste("Control subjects: Standard Deviation of", t2), std2,
-            "b (std2 / std1)", b,
-            "c mt2 - (b * mt1)", c,
-            "std1^2 + std2^2", s1s2,
-            "1 - (test-retest correlation)", oneminr12,
-            "SEE", see
+            "Total number of observations in the data set", nrow_a1,
+            tabletext, nrow_a2,
+            paste0("No. of `", ref, "` that have complete data"), nrow_a3,
+            paste0("Mean of `", t1, "` (`", ref, "` only; mt1)"), mt1,
+            paste0("Mean of `", t2, "` (`", ref, "` only; mt2)"), mt2,
+            paste0("St.Dev of `", t1, "` (`", ref, "` only; std1)"), std1,
+            paste0("St.Dev of `", t2, "` (`", ref, "` only; std2)"), std2,
+            "Estimted beta weight (b): (std2 / std1)", b,
+            "Estimated constant (c): mt2 - (b * mt1)", c,
+            "Sum of T1 and T2 variance (s1s2): std1^2 + std2^2", s1s2,
+            "Test-rest correlation (r12)", r12,
+            "1 - 'test-retest correlation' (oneminr12)", oneminr12,
+            "SEE: sqrt(s1s2 * oneminr12)", see
         )
         omat <- as.data.frame(cbind(omat[c(TRUE, FALSE)], omat[c(FALSE, TRUE)]))
         names(omat) <- c("Variable", "Value")

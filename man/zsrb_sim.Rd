@@ -4,7 +4,7 @@
 \alias{zsrb_sim}
 \title{Calculate the Simple Standard Regression Based Change Score}
 \usage{
-zsrb_sim(idf, t1, t2, group1, group2, ref, covs = NULL)
+zsrb_sim(idf, t1, t2, group, ref = NULL)
 }
 \arguments{
 \item{idf}{Input data frame}
@@ -13,13 +13,11 @@ zsrb_sim(idf, t1, t2, group1, group2, ref, covs = NULL)
 
 \item{t2}{Outcome variable scores at time point 2}
 
-\item{group1}{Group variable at time point 1}
+\item{group}{Group variable. If group membership changes over time, you can
+add an array with groups, e.g., c("group_t1", "group_t2")}
 
-\item{group2}{Group variable at time point 2}
-
-\item{ref}{Reference group}
-
-\item{covs}{One or more covariates that you want to take into account}
+\item{ref}{Reference group. If not set, the first factor level or lowest
+value will be selected}
 }
 \description{
 Calculate the Standard Regression Based Change Score as described by
