@@ -2,8 +2,8 @@
 
 * Index
 - [[#background][Background]]
-- [[#Simple%20ZSRB][Simple ZSRB]]
-- [[#Complex%20ZSRB][Complex ZSRB]]
+- [[#Simple-ZSRB][Simple ZSRB]]
+- [[#Complex-ZSRB][Complex ZSRB]]
 - [[#Dependencies][Dependencies]]
 - [[#Installation][Installation]]
 
@@ -13,8 +13,8 @@ This R package allows you to calculate Standardized (z-transformed) Regression B
 Calculating ZSRB scores requires a control group that serves as the baseline population for estimating 'normal' expected change, and one or more other groups.
 
 There are two approaches two calculating ZSRB scores:
-- [[#Simple%20ZSRB][Simple ZSRB]] (legacy option for validation of / comparison with other work)
-- [[#Complex%20ZSRB][Complex ZSRB]] (preferred option that allows taking into account covariates)
+- [[#Simple-ZSRB][Simple ZSRB]] (legacy option for validation of / comparison with other work)
+- [[#Complex-ZSRB][Complex ZSRB]] (preferred option that allows taking into account covariates)
 
 ** Simple ZSRB
 The 'simple' approach to the ZSRB calculates the metric by:
