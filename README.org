@@ -64,6 +64,9 @@ The 'complex' approach to the ZSRB calculates the metric by:
 3) The difference between the observed (T2) and estimated (T2’) is then calculated: =T2 - T2’=
 4) This difference score is then scaled (divided by) the /residual standard deviation/ of the linear regression model (see [[https://stat.ethz.ch/R-manual/R-devel/library/stats/html/sigma.html][this]] documentation) to obtain the SRB z-score.
 
+*Interpretation of the ZSRB:*
+The residual standard deviation of the regression is the average distance that the observed values fall from the regression line from the model fitted under '1)'. As, such dividing the difference scores by the residual standard deviation makes it such that the unit of the outcome (the ZSRB) is in standard deviations of the residual standard deviation. So, positive scores indicate observations where the subject scores /x/ standard deviations above their expected score, while negative scores indicate observations where subject scores /x/ standard deviations below their expected score.
+
 *** Input variables
 =zsrb_com= accepts the following input parameters:
 
