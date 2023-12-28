@@ -1,0 +1,187 @@
+#+TITLE: Standardized Regression-Based (SRB) Change Score: 'simple' example
+#+PROPERTY: header-args :tangle no
+#+PROPERTY: header-args+ :exports both
+#+PROPERTY: header-args+ :eval never-export
+#+PROPERTY: header-args:R+ :session *SRB_R_sim*
+
+* Generate some practice data
+Generate a practice data set that contains the following variables:
+- Group (controls vs. patients): Both a binary and a factor variable will be included
+- Outcome scores of an imaginary outcome measure at two time points: T1 and T2. The outcomes are manipulated such that:
+  + T2 scores are overall smaller than T1 scores (effect of time) and is depending on the time interval (see below)
+  + Patients perform worse than controls at both T1 and T2 (with group-by-time interaction effect)
+  + Random noise is added to the T1 and T2 score
+- An interval variable that indicates the difference in days between the T1 and T2 assessments
+
+/Note that the simple ZSRB approach does not allow for adding covariates and thus also cannot account for differences in assessment1-assessment2 time intervals between subjects./
+
+#+begin_src R :results table :exports both
+## * Display width
+options(width = 100)
+
+## * Make this work replicable
+set.seed(357)
+
+## * Number of observations
+my_n <- 1000
+
+## * Create an empty data frame
+df <- as.data.frame(matrix(data = NA, nrow = my_n, ncol = 0))
+
+## * Define a group variable
+## ** Group at time 1
+df$group_t1 <- sample.int(2, my_n, replace = TRUE) - 1
+df$group_t1.f[df$group_t1 == 0] <- "control"
+df$group_t1.f[df$group_t1 == 1] <- "patient"
+df$group_t1.f <- as.factor(df$group_t1.f)
+
+## ** Group at time 2
+df$group_t2 <- df$group_t1
+df$group_t2.f <- df$group_t1.f
+## *** Randomly move a proportion of subjects from control to patient
+myprop <- 0.1
+## *** Number of rows based on proportion
+n_obs2change <- round(myprop * nrow(df), digits = 0)
+## *** List rows with control subjects
+ctrl_rows <- seq_len(nrow(df))[df$group_t1.f == "control"]
+## *** Randomly select the rows that will be changed
+i_obs2change <- sample(ctrl_rows, n_obs2change)
+## *** Change the group membership for these rows
+for (i in i_obs2change) {
+  df$group_t2[i] <- 1
+  df$group_t2.f[i] <- "patient"
+}
+
+## ** Effect of group (effect per category)
+# For calculating the baseline score and follow-up score
+beta_group_t1 <- -5
+beta_group_t2 <- -5
+
+## * Generate outcome scores
+## ** Time-1 score
+# The last rnorm is to add some random error
+df$T1_score <-
+  rnorm(n = my_n, mean = 50, sd = 5) +
+  beta_group_t1 * df$group_t1 +
+  rnorm(n = my_n, mean = 0, sd = 5)
+
+## ** Time-2 score
+# The last rnorm is to add some random error
+df$T2_score <-
+  df$T1_score -
+  beta_group_t1 * df$group_t1 +
+  beta_group_t2 * df$group_t2 +
+  rnorm(n = my_n, mean = 0, sd = 5)
+
+## * Peek at the data
+voi <- c("group_t1.f", "group_t2.f", "T1_score", "T2_score")
+head(df[, voi])
+#+end_src
+
+#+RESULTS:
+| control | control | 30.2608301581765 | 20.8380713991971 |
+| patient | patient | 45.1239070463731 | 36.0064372017125 |
+| control | control |   61.42543293413 | 62.6033747112407 |
+| control | control |   48.51883379875 |  47.573156087997 |
+| control | control | 48.5373598196495 | 52.1449591106648 |
+| patient | patient | 45.6803662284432 | 54.4531467204166 |
+
+* Calculate the 'simple' ZSRB
+#+begin_src R :results output none
+my_srb_list <-
+  zsrb::zsrb_sim(
+          idf = df,
+          t1 = "T1_score",
+          t2 = "T2_score",
+          group = c("group_t1.f", "group_t2.f"),
+          ref = "control"
+        )
+#+end_src
+
+In the syntax above, I am entering the following variables:
+- =idf = df=: 'df' is the data frame with all the variables (outcomes, predictors, covariates).
+- =t1 = "T1_score"=: 'T1_score' is the column name of the outcome measure at baseline.
+- =t2 = "T2_score"=: 'T1_score' is the column name of the outcome measure at follow-up.
+- =group = c("group_t1.f", "group_t2.f")=: 'c("group_t1.f", "group_t2.f")' is an array of variables that divide your sample up into groups (e.g., control/patient, no-intervention/intervention/etc). This variable is only used to select the control group that will be used to derive parameter estimates for the ZSRB calculations. You can either enter one or two variables here. If you enter two variables, only subjects are selected where both group variables indicate that they are control subjects. So, if a subject is a control at time point one, but have progressed to being a patient at time point two, they will not be selected into the control group. /Note that group variables can be entered as either class factor or class numeric./
+- =ref = "control"=: 'control' is the factor level that is being used as the reference group for the ZSRB calculations. This parameter is optional. If you don't specify this parameter, the zsrb function will automatically determine the first level of your factor variable as the reference category (read [[https://stackoverflow.com/questions/3872070/how-to-force-r-to-use-a-specified-factor-level-as-reference-in-a-regression][here]] about releveling factor variables with base R). If you entered your group variable(s) as class numeric and you did not specify a reference group with 'ref', then the minimum value is selected as the reference category.
+
+** Output
+The output object consists of a list that contains 2 elements:
+
+- =my_srb_list[[1]]= contains the output of all the _sample size_ and _summary statistics_ that were used to calculate the ZSRB.
+
+  #+begin_src R :results table :exports both
+  print(my_srb_list[[1]])
+  #+end_src
+
+  #+RESULTS:
+  | Total number of observations in the data set       |              1000 |
+  | No. of `control` that remain `control` at T2_score |               404 |
+  | No. of `control` that have complete data           |               404 |
+  | Mean of `T1_score` (`control` only; mt1)           |  50.1062293728821 |
+  | Mean of `T2_score` (`control` only; mt2)           |  50.4449272259639 |
+  | St.Dev of `T1_score` (`control` only; std1)        |  6.97773486171897 |
+  | St.Dev of `T2_score` (`control` only; std2)        |  8.52575129234701 |
+  | Estimted beta weight (b): (std2 / std1)            |   1.2218508529352 |
+  | Estimated constant (c): mt2 - (b * mt1)            | -10.7774118706589 |
+  | Sum of T1 and T2 variance (s1s2): std1^2 + std2^2  |  121.377218899405 |
+  | Test-rest correlation (r12)                        | 0.810850862103038 |
+  | 1 - 'test-retest correlation' (oneminr12)          | 0.189149137896962 |
+  | SEE: sqrt(s1s2 * oneminr12)                        |  4.79149207608165 |
+
+- =my_srb_list[[2]]= contains the output _data frame_. This data frame is the same as the input data frame, but with an additional column: the ZSRB score for the model.
+
+  #+begin_src R :results output org :exports both
+  options(width=80)
+  print(names(my_srb_list[[2]]))
+  #+end_src
+
+  #+RESULTS:
+  #+begin_src org
+  [1] "group_t1"               "group_t1.f"             "group_t2"
+  [4] "group_t2.f"             "T1_score"               "T2_score"
+  [7] "T2_score_est"           "zsrb_T1_score_T2_score"
+  #+end_src
+
+  The last variable here is the ZSRB score for the behavioral outcome T1_score - T2_score
+
+  #+begin_src R :results table :exports both
+  head(my_srb_list[[2]][, c(voi, "zsrb_T1_score_T2_score")])
+  #+end_src
+
+  #+RESULTS:
+  | control | control | 30.2608301581765 | 20.8380713991971 |   -1.1183860443366 |
+  | patient | patient | 45.1239070463731 | 36.0064372017125 |  -1.74284650948172 |
+  | control | control |   61.42543293413 | 62.6033747112407 | -0.348937452892202 |
+  | control | control |   48.51883379875 |  47.573156087997 | -0.194555367506817 |
+  | control | control | 48.5373598196495 | 52.1449591106648 |  0.754870597515456 |
+  | patient | patient | 45.6803662284432 | 54.4531467204166 |   1.96514238215334 |
+
+  You can display the distribution of the ZSRB score using the base R =hist()= function, but for this github example, I will use the =txtplot= package:
+
+  #+begin_src R :results output org :exports both
+  install.packages("txtplot")
+  options(width=80)
+  print(txtplot::txtdensity(my_srb_list[[2]]$zsrb_T1_score_T2_score))
+  #+end_src
+
+  #+RESULTS:
+  #+begin_src org
+       +--+------------+------------+------------+------------+--+
+   0.3 +                         *********                       +
+       |                       ***       **                      |
+  0.25 +                     ***          **                     +
+       |                    **             **                    |
+   0.2 +                   **               **                   +
+       |                  **                 **                  |
+  0.15 +                 **                   *                  +
+       |                 *                     *                 |
+   0.1 +                **                      *                +
+       |              ***                        **              |
+  0.05 +            ***                           **             +
+       |         ****                              ***           |
+     0 +  ********                                    *********  +
+       +--+------------+------------+------------+------------+--+
+         -4           -2            0            2            4
+  NULL
+  #+end_src
