@@ -4,16 +4,44 @@ This R package allows you to calculate Standardized (z-transformed) Regression B
 Calculating ZSRB scores requires a control group that serves as the baseline population for estimating 'normal' expected change, and one or more other groups.
 
 ** Simple ZSRB
-TBD
+The 'simple' approach to the ZSRB calculates the metric by:
+1) Calculating the estimated beta weight (b) by dividing the standard deviation of the reference group at Time 2 (S2) by the standard deviation of the reference group at Time 1 (S1): =b = S2/S1=
+2) Calculating the estimated constant (c) by finding the product of b and the mean of the control group at Time 1 (M1), and subtracting the value from the mean of the control group at Time 2 (M2): =c = M2 – (bM1)=
+3) Calculating the estimated standard error of the estimate (SEE) by:
+   - Find the sum of the S1 squared and S2 squared: =S12+S22=
+   - Find one minus the control group's test-retest correlation (r12): =in 1-r12=
+   - Multiply S12+S22 and 1-r12: =(S12+S22) * (1-r12)=
+   - Take the square root of the resulting product: =SEE = sqrt((S12+S22) * (1-r12))=
+4) Calculating the estimated predicted score at Time 2 (T2’): =T2’ = b * T1 + c= where T1 is the observed score at Time 1
+5) Estimating the SRB z-score was by subtracting the T2’ score from the observed Time 2 score (T2), and dividing the result by the estimated SEE: =ZSRB = (T2 – T2’) / SEE=
+
+*Note that this approach does not allow for adding covariates into the model. As such, the 'complex' zsrb function (see below) is preferred over using this option. However, this 'simple' approach can be used for validation of or comparison with other studies that use this approach.*
 
 *** Input variables
+=zsrb_sim= accepts the following input parameters:
 
-*** Output variables
+- =idf=: a *data frame* with all the variables (outcomes, predictors, covariates)
+- =t1=: a *string* referencing the column name in `idf` of the outcome measure at baseline
+- =t2=: a *string* referencing the column name in `idf` of the outcome measure at follow-up
+- =group=: a *string* or *array* referencing the group variables in `idf` at baseline and follow-up. This variable is only used to select the control group that will be used to derive parameter estimates for the ZSRB calculations. If you enter a string, this single variable will be used to determine the reference group. If you enter an array with a maximum of two strings, only subjects are selected where both group variables indicate that they are control subjects. So, if a subject is a control at time point one, but have progressed to being a patient at time point two, they will not be selected into the control group. /Note that group variables can be entered as either class factor or class numeric./
+- =ref= (/optional/):  a *string* or *integer* indicating with factor level (in case of a string) or numeric value (in case of an integer) represents the reference group for the ZSRB calculations. This parameter is optional. If you don't specify this parameter, the zsrb function will automatically determine the first level of your factor variable as the reference category. If you entered your group variable(s) as class numeric and you did not specify a reference group with 'ref', then the minimum value is selected as the reference category.
+
+*** Output
+The =zsrb_sim= function returns a list object with two items:
+
+- The first element contains _sample size information_ of the subjects used for obtaining the regression parameters and the _summary statistics_ to calculate the ZSRB.
+
+- The second element contains the output _data frame_. This data frame is a copy of input data frame with an additional column: the ZSRB score for the model. The name of this column is a concatenation of =zsrb= and the variable names you entered for =t1= and =t2=, separated by underscores. E.g., =zsrb_T1score_T2score=.
 
 *** Example
+A toy example can be found [[./examples/zsrb_sim_example.org][here]].
 
 ** Complex ZSRB
-TBD
+The 'complex' approach to the ZSRB calculates the metric by:
+1) Building a linear regression model with the T2 score as output and T1 score and any specified covariates for as predictors. Only data of the reference group is used here.
+2) Calculate the estimated Time 2 score (T2’) for all subjects over all groups, using the intercept and beta parameters derived from the linear regression model. So, for each subject it will build this score by starting with the reference group intercept and then adding the product of the beta value for T1 score by the subject's T1 score. If covariates were entered, this procedure is continued for all covariates, until the final T2’ score is obtained.
+3) The difference between the observed (T2) and estimated (T2’) is then calculated: =T2 - T2’=
+4) This difference score is then scaled (divided by) the /residual standard deviation/ of the linear regression model (see [[https://stat.ethz.ch/R-manual/R-devel/library/stats/html/sigma.html][this]] documentation) to obtain the SRB z-score.
 
 *** Input variables
 =zsrb_com= accepts the following input parameters:
@@ -22,7 +50,7 @@ TBD
 - =t1=: a *string* referencing the column name in `idf` of the outcome measure at baseline
 - =t2=: a *string* referencing the column name in `idf` of the outcome measure at follow-up
 - =group=: a *string* or *array* referencing the group variables in `idf` at baseline and follow-up. This variable is only used to select the control group that will be used to derive parameter estimates for the ZSRB calculations. If you enter a string, this single variable will be used to determine the reference group. If you enter an array with a maximum of two strings, only subjects are selected where both group variables indicate that they are control subjects. So, if a subject is a control at time point one, but have progressed to being a patient at time point two, they will not be selected into the control group. /Note that group variables can be entered as either class factor or class numeric./
-- =ref= (/optional/):  a *string* or *integer* indicating with factor level (in case of a string) or numeric value (in case of an integer) represents the reference group for the ZSRB calculations. This parameter is optional. If you don't specify parameter, the zsrb function will automatically determine the first level of your factor variable as the reference category. If you entered your group variable(s) as class numeric and you did not specify a reference group with 'ref', then the minimum value is selected as the reference category.
+- =ref= (/optional/):  a *string* or *integer* indicating with factor level (in case of a string) or numeric value (in case of an integer) represents the reference group for the ZSRB calculations. This parameter is optional. If you don't specify this parameter, the zsrb function will automatically determine the first level of your factor variable as the reference category. If you entered your group variable(s) as class numeric and you did not specify a reference group with 'ref', then the minimum value is selected as the reference category.
 - =covs= (/optional/): a *string* or *array* with covariates that will be regressed out when calculating the ZSRB.
 
 *** Output
