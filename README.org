@@ -16,6 +16,11 @@ There are two approaches two calculating ZSRB scores:
 - [[#Simple-ZSRB][Simple ZSRB]] (legacy option for validation of / comparison with other work)
 - [[#Complex-ZSRB][Complex ZSRB]] (preferred option that allows taking into account covariates)
 
+More information on the differences between these methods and how the compare to other methods of change can be found in these articles:
+- [[https://orcid.org/0000-0002-9336-2400][Duff, K]]. (2012). Evidence-based indicators of neuropsychological change in the individual patient: relevant concepts and methods. Archives of Clinical Neuropsychology, 27(3), 248–261. http://dx.doi.org/10.1093/arclin/acr120
+
+- [[https://orcid.org/0000-0002-9336-2400][Duff, K]]., Atkinson, T. J., Suhrie, K. R., Dalley, B. C. A., Schaefer, S. Y., & Hammers, D. B. . (2017). Short-term practice effects in mild cognitive impairment: evaluating different methods of change. Journal of Clinical and Experimental Neuropsychology, 39(4), 396–407. http://dx.doi.org/10.1080/13803395.2016.1230596
+
 ** Simple ZSRB
 The 'simple' approach to the ZSRB calculates the metric by:
 1) Calculating the estimated beta weight (b) by dividing the standard deviation of the reference group at Time 2 (S2) by the standard deviation of the reference group at Time 1 (S1): =b = S2/S1=
@@ -49,6 +54,9 @@ The =zsrb_sim= function returns a list object with two items:
 *** Example
 A toy example can be found [[./examples/zsrb_sim_example.org][here]].
 
+*** Examples of published studies using the simple ZSRB method
+1) Guevara, J. E., Kurniadi, N. E., & [[https://orcid.org/0000-0002-9336-2400][Duff, K]]. (2023). Assessing longitudinal cognitive change in mild cognitive impairment using estimated standardized regression-based formulas. Journal of Alzheimer's Disease, 95(2), 509–521. http://dx.doi.org/10.3233/jad-230160
+
 ** Complex ZSRB
 The 'complex' approach to the ZSRB calculates the metric by:
 1) Building a linear regression model with the T2 score as output and T1 score and any specified covariates for as predictors. Only data of the reference group is used here.
@@ -78,6 +86,9 @@ The =zsrb_com= function returns a list object with three items:
 
 *** Example
 A toy example can be found [[./examples/zsrb_com_example.org][here]].
+
+*** Examples of published studies using the complex ZSRB method
+1) [[https://orcid.org/0000-0002-9336-2400][Duff, K]]., Schoenberg, M. R., Patton, D., Mold, J., Scott, J. G., & Adams, R. L. (2004). Predicting change with the rbans in a community dwelling elderly sample. Journal of the International Neuropsychological Society, 10(6), 828–834. http://dx.doi.org/10.1017/s1355617704106048
 
 * Dependencies
 This package does _not_ rely on other packages.
